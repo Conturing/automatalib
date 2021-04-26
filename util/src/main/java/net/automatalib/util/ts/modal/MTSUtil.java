@@ -15,7 +15,11 @@
  */
 package net.automatalib.util.ts.modal;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -105,8 +109,11 @@ public final class MTSUtil {
     public static <S, I> Set<S> reachableSubset(UniversalFiniteAlphabetAutomaton<S, I, ?, ?, ?> ts,
                                                 Collection<I> inputs,
                                                 Set<S> states) {
-        Pair<Map<Set<S>, Integer>, CompactDFA<I>> graphView =
-                Subgraphs.subgraphView(new CompactDFA.Creator<>(), SubgraphType.DISREGARD_UNKNOWN_LABELS, ts, inputs, t -> Collections.singleton(null));
+        Pair<Map<Set<S>, Integer>, CompactDFA<I>> graphView = Subgraphs.subgraphView(new CompactDFA.Creator<>(),
+                                                                                     SubgraphType.DISREGARD_UNKNOWN_LABELS,
+                                                                                     ts,
+                                                                                     inputs,
+                                                                                     t -> Collections.singleton(null));
 
         CompactDFA<I> dfa = graphView.getSecond();
         Integer init = dfa.getInitialState();

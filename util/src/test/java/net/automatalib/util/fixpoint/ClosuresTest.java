@@ -28,7 +28,6 @@ import net.automatalib.util.automata.predicates.TransitionPredicates;
 import net.automatalib.words.impl.Alphabets;
 import org.assertj.core.api.Assertions;
 import org.testng.Assert;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class ClosuresTest {
@@ -50,12 +49,17 @@ public class ClosuresTest {
         Function<Set<Integer>, Set<Integer>> op =
                 Closures.toClosureOperator(dfa, dfa.getInputAlphabet(), TransitionPredicates.inputIs("b"));
 
-        Pair<Map<Set<Integer>, Integer>, CompactDFA<String>> rv =
-                Closures.closure(dfa, Alphabets.fromArray("a", "c"), CompactDFA::new, op, (s, i, t) -> true, t -> Collections.singleton(null));
+        Pair<Map<Set<Integer>, Integer>, CompactDFA<String>> rv = Closures.closure(dfa,
+                                                                                   Alphabets.fromArray("a", "c"),
+                                                                                   CompactDFA::new,
+                                                                                   op,
+                                                                                   (s, i, t) -> true,
+                                                                                   t -> Collections.singleton(null));
         CompactDFA<String> dfa2 = rv.getSecond();
         Assertions.assertThat(dfa2.getStates()).hasSize(3);
         Assertions.assertThat(dfa2.getTransitions(dfa2.getInitialState(), "a")).isNotEmpty();
-        Assertions.assertThat(rv.getFirst().keySet()).containsExactlyInAnyOrder(ImmutableSet.of(s0), ImmutableSet.of(s1,s2), ImmutableSet.of(s3));
+        Assertions.assertThat(rv.getFirst().keySet())
+                  .containsExactlyInAnyOrder(ImmutableSet.of(s0), ImmutableSet.of(s1, s2), ImmutableSet.of(s3));
     }
 
     @Test
@@ -81,8 +85,12 @@ public class ClosuresTest {
         Function<Set<Integer>, Set<Integer>> op =
                 Closures.toClosureOperator(dfa, dfa.getInputAlphabet(), TransitionPredicates.inputIs("b"));
 
-        Pair<Map<Set<Integer>, Integer>, CompactDFA<String>> rv =
-                Closures.closure(dfa, Alphabets.fromArray("a", "c"), CompactDFA::new, op, (s, i, t) -> true, t -> Collections.singleton(null));
+        Pair<Map<Set<Integer>, Integer>, CompactDFA<String>> rv = Closures.closure(dfa,
+                                                                                   Alphabets.fromArray("a", "c"),
+                                                                                   CompactDFA::new,
+                                                                                   op,
+                                                                                   (s, i, t) -> true,
+                                                                                   t -> Collections.singleton(null));
         CompactDFA<String> dfa2 = rv.getSecond();
         Assertions.assertThat(dfa2.getStates()).hasSize(3);
 

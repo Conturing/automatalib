@@ -15,12 +15,17 @@
  */
 package net.automatalib.util.ts.modal;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import net.automatalib.automata.AutomatonCreator;
 import net.automatalib.automata.fsa.DFA;
@@ -101,7 +106,8 @@ public final class MCUtil {
             Collection<I> remainingAlphabet,
             AutomatonCreator<A, I> creator) {
 
-        Function<Set<? super T>, Set<? extends TP>> tpMapping = tset -> tset.stream().map(t -> ts.getTransitionProperty((T) t)).collect(Collectors.toSet());
+        Function<Set<? super T>, Set<? extends TP>> tpMapping =
+                tset -> tset.stream().map(t -> ts.getTransitionProperty((T) t)).collect(Collectors.toSet());
 
         return Subgraphs.subgraphView(creator,
                                       Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
@@ -118,21 +124,20 @@ public final class MCUtil {
             Comparator<TP1> comp,
             Function<TP1, TP2> tpMapping) {
 
-        Function<Set<? super T1>, Set<? extends TP2>> tMapping = tset ->
-                tset.stream()
-                        .map(t -> ts.getTransitionProperty((T1) t))
-                        .max(comp)
-                        .map(tpMapping)
-                        .map(Collections::singleton).orElse(Collections.emptySet());
+        Function<Set<? super T1>, Set<? extends TP2>> tMapping = tset -> tset.stream()
+                                                                             .map(t -> ts.getTransitionProperty((T1) t))
+                                                                             .max(comp)
+                                                                             .map(tpMapping)
+                                                                             .map(Collections::singleton)
+                                                                             .orElse(Collections.emptySet());
 
         return Subgraphs.subgraphView(creator,
-                Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
-                ts,
-                remainingAlphabet,
-                tMapping).getSecond();
+                                      Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
+                                      ts,
+                                      remainingAlphabet,
+                                      tMapping).getSecond();
 
     }
-
 
     public static <I, B extends ModalTransitionSystem<S2, I, T2, ?>, S2, T2> DFA<?, I> redContextLanguage(
             SystemComponent<B, S2> system,

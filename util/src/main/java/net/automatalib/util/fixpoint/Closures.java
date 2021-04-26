@@ -34,7 +34,6 @@ import net.automatalib.commons.util.fixpoint.WorksetMappingAlgorithm;
 import net.automatalib.commons.util.fixpoint.Worksets;
 import net.automatalib.ts.TransitionPredicate;
 import net.automatalib.words.impl.Alphabets;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class Closures {
 
@@ -51,11 +50,7 @@ public final class Closures {
         return closure(ts,
                        inputs,
                        creator,
-                       toClosureOperator(ts,
-                                         allInputs,
-                                         (s, i, t) -> !transitionFilter.apply(s,
-                                                                              i,
-                                                                              t)),
+                       toClosureOperator(ts, allInputs, (s, i, t) -> !transitionFilter.apply(s, i, t)),
                        transitionFilter,
                        t -> Collections.singleton(null));
     }
@@ -67,7 +62,12 @@ public final class Closures {
             Function<Set<S1>, Set<S1>> closureOperator,
             TransitionPredicate<S1, I, T1> transitionFilter,
             Function<Set<? super T1>, Set<? extends TP2>> tpMapping) {
-        return Worksets.map(new StateClosureAlgorithm<>(ts, inputs, creator, closureOperator, transitionFilter, tpMapping));
+        return Worksets.map(new StateClosureAlgorithm<>(ts,
+                                                        inputs,
+                                                        creator,
+                                                        closureOperator,
+                                                        transitionFilter,
+                                                        tpMapping));
     }
 
     /**
