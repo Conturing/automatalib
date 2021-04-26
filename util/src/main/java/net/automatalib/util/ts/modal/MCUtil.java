@@ -15,16 +15,12 @@
  */
 package net.automatalib.util.ts.modal;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import net.automatalib.automata.AutomatonCreator;
 import net.automatalib.automata.fsa.DFA;
@@ -100,6 +96,44 @@ public final class MCUtil {
         return SystemComponent.of(result, uniqueState);
     }
 
+    public static <A extends MutableModalTransitionSystem<S, I, T, TP>, S, I, T, TP extends MutableModalEdgeProperty> A observableAutomaton(
+            ModalTransitionSystem<S, I, T, TP> ts,
+            Collection<I> remainingAlphabet,
+            AutomatonCreator<A, I> creator) {
+
+        Function<Set<? super T>, Set<? extends TP>> tpMapping = tset -> tset.stream().map(t -> ts.getTransitionProperty((T) t)).collect(Collectors.toSet());
+
+        return Subgraphs.subgraphView(creator,
+                                      Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
+                                      ts,
+                                      remainingAlphabet,
+                                      tpMapping).getSecond();
+
+    }
+
+    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP2>, S1, S2, I, T1, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> A determizeObservable(
+            ModalTransitionSystem<S1, I, T1, TP1> ts,
+            Collection<I> remainingAlphabet,
+            AutomatonCreator<A, I> creator,
+            Comparator<TP1> comp,
+            Function<TP1, TP2> tpMapping) {
+
+        Function<Set<? super T1>, Set<? extends TP2>> tMapping = tset ->
+                tset.stream()
+                        .map(t -> ts.getTransitionProperty((T1) t))
+                        .max(comp)
+                        .map(tpMapping)
+                        .map(Collections::singleton).orElse(Collections.emptySet());
+
+        return Subgraphs.subgraphView(creator,
+                Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
+                ts,
+                remainingAlphabet,
+                tMapping).getSecond();
+
+    }
+
+
     public static <I, B extends ModalTransitionSystem<S2, I, T2, ?>, S2, T2> DFA<?, I> redContextLanguage(
             SystemComponent<B, S2> system,
             Collection<I> inputs) {
@@ -156,7 +190,8 @@ public final class MCUtil {
                                                                                                             i)),
                                                                          (s, i, t) -> gamma.contains(i) &&
                                                                                       !modalContract.getTransitionProperty(
-                                                                                              t).isRed());
+                                                                                              t).isRed(),
+                                                                         t -> Collections.singleton(null));
 
         CompactDFA<I> dfa = res.getSecond();
         Map<Set<S>, Integer> mapping = res.getFirst();
@@ -299,7 +334,7 @@ public final class MCUtil {
         }
     }
 
-    public static class DecompositionResult<CT extends ModalTransitionSystem<?, I, ?, ?>, IT extends ModalTransitionSystem<S2, ?, ?, ?>, I, S2> {
+    public static class DecompositionResult<CT extends ModalTransitionSystem<?, I, ?, ?>, IT extends ModalTransitionSystem<S2, I, ?, ?>, I, S2> {
 
         public final CT contextComponent;
         public final SystemComponent<IT, S2> systemComponent;

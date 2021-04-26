@@ -18,6 +18,7 @@ package net.automatalib.util.ts.modal;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import net.automatalib.automata.AutomatonCreator;
 import net.automatalib.automata.MutableAutomaton;
@@ -57,11 +58,12 @@ public final class Subgraphs {
      * Creates a new instance of creator and copies ts into it. All symbols not in inputs are handled according to
      * strategy.
      */
-    public static <A extends MutableAutomaton<S1, I, T1, SP1, TP1>, B extends UniversalFiniteAlphabetAutomaton<S2, I, T2, SP2, TP2>, S1, I, T1, SP1, TP1, S2, T2, SP2, TP2> Pair<Map<Set<S2>, S1>, A> subgraphView(
+    public static <A extends MutableAutomaton<S1, I, ?, ?, TP1>, B extends UniversalFiniteAlphabetAutomaton<S2, I, T2, ?, TP2>, S1, I, TP1, S2, T2, TP2> Pair<Map<Set<S2>, S1>, A> subgraphView(
             AutomatonCreator<A, I> creator,
             SubgraphType type,
             B ts,
-            Collection<I> inputs) {
+            Collection<I> inputs,
+            Function<Set<? super T2>, Set<? extends TP1>> tpMapping) {
 
         return Closures.closure(ts,
                                 inputs,
@@ -69,6 +71,7 @@ public final class Subgraphs {
                                 Closures.toClosureOperator(ts,
                                                            ts.getInputAlphabet(),
                                                            type.getTransitionPredicate(inputs)),
-                                TransitionPredicates.inputIn(inputs));
+                                TransitionPredicates.inputIn(inputs),
+                                tpMapping);
     }
 }

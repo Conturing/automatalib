@@ -42,30 +42,32 @@ public final class Closures {
         // prevent instantiation
     }
 
-    public static <A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, @Nullable ?>, S1, S2, I, T1> Pair<Map<Set<S1>, S2>, B> simpleClosure(
+    public static <A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, TP2>, S1, S2, I, T1, TP2> Pair<Map<Set<S1>, S2>, B> simpleClosure(
             A ts,
             Collection<I> inputs,
             Collection<I> allInputs,
             AutomatonCreator<B, I> creator,
             TransitionPredicate<S1, I, T1> transitionFilter) {
-        return Worksets.map(new StateClosureAlgorithm<>(ts,
-                                                        inputs,
-                                                        creator,
-                                                        toClosureOperator(ts,
-                                                                          allInputs,
-                                                                          (s, i, t) -> !transitionFilter.apply(s,
-                                                                                                               i,
-                                                                                                               t)),
-                                                        transitionFilter));
+        return closure(ts,
+                       inputs,
+                       creator,
+                       toClosureOperator(ts,
+                                         allInputs,
+                                         (s, i, t) -> !transitionFilter.apply(s,
+                                                                              i,
+                                                                              t)),
+                       transitionFilter,
+                       t -> Collections.singleton(null));
     }
 
-    public static <A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, @Nullable ?>, S1, S2, I, T1> Pair<Map<Set<S1>, S2>, B> closure(
+    public static <A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, TP2>, S1, S2, I, T1, TP2> Pair<Map<Set<S1>, S2>, B> closure(
             A ts,
             Collection<I> inputs,
             AutomatonCreator<B, I> creator,
             Function<Set<S1>, Set<S1>> closureOperator,
-            TransitionPredicate<S1, I, T1> transitionFilter) {
-        return Worksets.map(new StateClosureAlgorithm<>(ts, inputs, creator, closureOperator, transitionFilter));
+            TransitionPredicate<S1, I, T1> transitionFilter,
+            Function<Set<? super T1>, Set<? extends TP2>> tpMapping) {
+        return Worksets.map(new StateClosureAlgorithm<>(ts, inputs, creator, closureOperator, transitionFilter, tpMapping));
     }
 
     /**
@@ -103,7 +105,7 @@ public final class Closures {
         };
     }
 
-    private static final class StateClosureAlgorithm<A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, @Nullable ?>, S1, S2, I, T1>
+    private static final class StateClosureAlgorithm<A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, TP2>, S1, S2, I, T1, TP2>
             implements WorksetMappingAlgorithm<Set<S1>, S2, B> {
 
         private final A inputTS;
@@ -111,18 +113,21 @@ public final class Closures {
         private final Collection<I> inputs;
         private final Function<Set<S1>, Set<S1>> closureOperator;
         private final TransitionPredicate<S1, I, T1> transitionFilter;
+        private final Function<Set<? super T1>, Set<? extends TP2>> tpMapping;
 
         StateClosureAlgorithm(A ts,
                               Collection<I> inputs,
                               AutomatonCreator<B, I> creator,
                               Function<Set<S1>, Set<S1>> closureOperator,
-                              TransitionPredicate<S1, I, T1> transitionFilter) {
+                              TransitionPredicate<S1, I, T1> transitionFilter,
+                              Function<Set<? super T1>, Set<? extends TP2>> tpMapping) {
 
             this.inputTS = ts;
             this.inputs = inputs;
             this.result = creator.createAutomaton(Alphabets.fromCollection(inputs));
             this.closureOperator = closureOperator;
             this.transitionFilter = transitionFilter;
+            this.tpMapping = tpMapping;
         }
 
         @Override
@@ -147,17 +152,19 @@ public final class Closures {
 
             for (I input : inputs) {
 
-                Set<S1> reachable = new HashSet<>(currentT.size());
+                Set<S1> reachableStates = new HashSet<>(currentT.size());
+                Set<T1> transitions = new HashSet<>(currentT.size());
 
                 for (S1 state : currentT) {
                     for (T1 transition : inputTS.getTransitions(state, input)) {
                         if (transitionFilter.apply(state, input, transition)) {
-                            reachable.add(inputTS.getSuccessor(transition));
+                            reachableStates.add(inputTS.getSuccessor(transition));
+                            transitions.add(transition);
                         }
                     }
                 }
 
-                Set<S1> closure = closureOperator.apply(reachable);
+                Set<S1> closure = closureOperator.apply(reachableStates);
                 if (closure.isEmpty()) {
                     continue;
                 }
@@ -167,7 +174,9 @@ public final class Closures {
                     mapping.put(closure, mappedStated);
                     discovered.add(closure);
                 }
-                result.addTransition(mapping.get(currentT), input, mappedStated, null);
+                for (TP2 property : tpMapping.apply(transitions)) {
+                    result.addTransition(mapping.get(currentT), input, mappedStated, property);
+                }
             }
 
             return discovered;

@@ -16,10 +16,12 @@
 package net.automatalib.util.fixpoint;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.google.common.collect.ImmutableSet;
 import net.automatalib.automata.fsa.impl.compact.CompactDFA;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.util.automata.predicates.TransitionPredicates;
@@ -32,7 +34,6 @@ import org.testng.annotations.Test;
 public class ClosuresTest {
 
     @Test
-    @Ignore
     void hideSymbols() {
 
         CompactDFA<String> dfa = new CompactDFA<>(Alphabets.fromArray("a", "b", "c"));
@@ -50,13 +51,14 @@ public class ClosuresTest {
                 Closures.toClosureOperator(dfa, dfa.getInputAlphabet(), TransitionPredicates.inputIs("b"));
 
         Pair<Map<Set<Integer>, Integer>, CompactDFA<String>> rv =
-                Closures.closure(dfa, Alphabets.fromArray("a", "c"), CompactDFA::new, op, (s, i, t) -> true);
+                Closures.closure(dfa, Alphabets.fromArray("a", "c"), CompactDFA::new, op, (s, i, t) -> true, t -> Collections.singleton(null));
         CompactDFA<String> dfa2 = rv.getSecond();
-        Assertions.assertThat(dfa2.getStates()).hasSize(4);
+        Assertions.assertThat(dfa2.getStates()).hasSize(3);
+        Assertions.assertThat(dfa2.getTransitions(dfa2.getInitialState(), "a")).isNotEmpty();
+        Assertions.assertThat(rv.getFirst().keySet()).containsExactlyInAnyOrder(ImmutableSet.of(s0), ImmutableSet.of(s1,s2), ImmutableSet.of(s3));
     }
 
     @Test
-    @Ignore
     void hideChain() {
 
         CompactDFA<String> dfa = new CompactDFA<>(Alphabets.fromArray("a", "b", "c"));
@@ -77,17 +79,14 @@ public class ClosuresTest {
         dfa.addTransition(s5, "c", s6);
 
         Function<Set<Integer>, Set<Integer>> op =
-                Closures.toClosureOperator(dfa, dfa.getInputAlphabet(), (s, i, t) -> "b".equals(i));
+                Closures.toClosureOperator(dfa, dfa.getInputAlphabet(), TransitionPredicates.inputIs("b"));
 
         Pair<Map<Set<Integer>, Integer>, CompactDFA<String>> rv =
-                Closures.closure(dfa, Alphabets.fromArray("a", "c"), CompactDFA::new, op, (s, i, t) -> true);
+                Closures.closure(dfa, Alphabets.fromArray("a", "c"), CompactDFA::new, op, (s, i, t) -> true, t -> Collections.singleton(null));
         CompactDFA<String> dfa2 = rv.getSecond();
-        Assertions.assertThat(dfa2.getStates()).hasSize(4);
+        Assertions.assertThat(dfa2.getStates()).hasSize(3);
 
         for (Map.Entry<Set<Integer>, Integer> stateClosures : rv.getFirst().entrySet()) {
-            if (stateClosures.getKey().contains(s0)) {
-                dfa2.setInitialState(stateClosures.getValue());
-            }
             if (stateClosures.getKey().contains(s6)) {
                 dfa2.setAccepting(stateClosures.getValue(), true);
             }
