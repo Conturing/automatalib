@@ -20,13 +20,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
 import com.google.common.collect.Sets;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import net.automatalib.automata.AutomatonCreator;
 import net.automatalib.automata.MutableAutomaton;
 import net.automatalib.automata.UniversalAutomaton;
@@ -53,7 +58,32 @@ public final class Closures {
                        creator,
                        toClosureOperator(ts, allInputs, (s, i, t) -> !transitionFilter.apply(s, i, t)),
                        transitionFilter,
-                       t -> Collections.singleton(null));
+                       t -> null);
+    }
+
+    public static <A extends MutableAutomaton<S, I, T, ?, TP>, S, I, T, TP> void transitionPostprocessing(
+            A ts,
+            Collection<I> inputs,
+            Function<Collection<T>, ? extends TP> tpMapping) {
+
+        SetMultimap<S, T> transitionGroups = MultimapBuilder.hashKeys().hashSetValues().build();
+
+        for (S state : ts.getStates()) {
+            for (I label : inputs) {
+                transitionGroups.clear();
+                for (T transition : ts.getTransitions(state, label)) {
+                    transitionGroups.put(ts.getSuccessor(transition), transition);
+                }
+
+                for (Map.Entry<S, Collection<T>> entry : transitionGroups.asMap().entrySet()) {
+                    TP property = tpMapping.apply(entry.getValue());
+                    for (T transition : entry.getValue()) {
+                        ts.removeTransition(state, label, transition);
+                    }
+                    ts.addTransition(state, label, entry.getKey(), property);
+                }
+            }
+        }
     }
 
     public static <A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, TP2>, S1, S2, I, T1, TP2> Pair<Map<Set<S1>, S2>, B> closure(
@@ -62,7 +92,7 @@ public final class Closures {
             AutomatonCreator<B, I> creator,
             Function<Set<S1>, Set<S1>> closureOperator,
             TransitionPredicate<S1, I, T1> transitionFilter,
-            Function<Set<? super T1>, Set<? extends TP2>> tpMapping) {
+            Function<? super T1, ? extends TP2> tpMapping) {
         return Worksets.map(new StateClosureAlgorithm<>(ts,
                                                         inputs,
                                                         creator,
@@ -114,14 +144,14 @@ public final class Closures {
         private final Collection<I> inputs;
         private final Function<Set<S1>, Set<S1>> closureOperator;
         private final TransitionPredicate<S1, I, T1> transitionFilter;
-        private final Function<Set<? super T1>, Set<? extends TP2>> tpMapping;
+        private final Function<? super T1, ? extends TP2> tpMapping;
 
         StateClosureAlgorithm(A ts,
                               Collection<I> inputs,
                               AutomatonCreator<B, I> creator,
                               Function<Set<S1>, Set<S1>> closureOperator,
                               TransitionPredicate<S1, I, T1> transitionFilter,
-                              Function<Set<? super T1>, Set<? extends TP2>> tpMapping) {
+                              Function<? super T1, ? extends TP2> tpMapping) {
 
             this.inputTS = ts;
             this.inputs = inputs;
@@ -175,8 +205,8 @@ public final class Closures {
                     mapping.put(closure, mappedStated);
                     discovered.add(closure);
                 }
-                for (TP2 property : tpMapping.apply(transitions)) {
-                    result.addTransition(mapping.get(currentT), input, mappedStated, property);
+                for (T1 transition : transitions) {
+                    result.addTransition(mapping.get(currentT), input, mappedStated, tpMapping.apply(transition));
                 }
             }
 

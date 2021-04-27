@@ -113,7 +113,7 @@ public final class MTSUtil {
                                                                                      SubgraphType.DISREGARD_UNKNOWN_LABELS,
                                                                                      ts,
                                                                                      inputs,
-                                                                                     t -> Collections.singleton(null));
+                                                                                     t -> null);
 
         CompactDFA<I> dfa = graphView.getSecond();
         Integer init = dfa.getInitialState();

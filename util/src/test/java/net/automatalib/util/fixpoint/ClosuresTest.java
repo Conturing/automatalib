@@ -54,7 +54,7 @@ public class ClosuresTest {
                                                                                    CompactDFA::new,
                                                                                    op,
                                                                                    (s, i, t) -> true,
-                                                                                   t -> Collections.singleton(null));
+                                                                                   t -> null);
         CompactDFA<String> dfa2 = rv.getSecond();
         Assertions.assertThat(dfa2.getStates()).hasSize(3);
         Assertions.assertThat(dfa2.getTransitions(dfa2.getInitialState(), "a")).isNotEmpty();
@@ -90,7 +90,7 @@ public class ClosuresTest {
                                                                                    CompactDFA::new,
                                                                                    op,
                                                                                    (s, i, t) -> true,
-                                                                                   t -> Collections.singleton(null));
+                                                                                   t -> null);
         CompactDFA<String> dfa2 = rv.getSecond();
         Assertions.assertThat(dfa2.getStates()).hasSize(3);
 

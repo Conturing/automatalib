@@ -42,7 +42,7 @@ public class SubgraphsTest {
                                        SubgraphType.HIDE_UNKNOWN_LABELS,
                                        contract,
                                        inputs,
-                                       t -> Collections.singleton(null));
+                                       t -> null);
 
         final CompactMMC<String> mmc = result.getSecond();
 
@@ -62,7 +62,7 @@ public class SubgraphsTest {
                                        SubgraphType.DISREGARD_UNKNOWN_LABELS,
                                        contract,
                                        inputs,
-                                       t -> Collections.singleton(null));
+                                       t -> null);
 
         final CompactMMC<String> mmc = result.getSecond();
 

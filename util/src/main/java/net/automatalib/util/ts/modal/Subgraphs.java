@@ -63,7 +63,7 @@ public final class Subgraphs {
             SubgraphType type,
             B ts,
             Collection<I> inputs,
-            Function<Set<? super T2>, Set<? extends TP1>> tpMapping) {
+            Function<? super T2, ? extends TP1> tpMapping) {
 
         return Closures.closure(ts,
                                 inputs,
