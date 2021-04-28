@@ -136,6 +136,21 @@ public final class Closures {
         };
     }
 
+    /**
+     *
+     * The transitionFilter controls which transitions are visible outside a state closure. When a transition is added
+     * through the closure operator, it is generally a good idea to exclude them from the global scope.
+     *
+     * The closureOperator is not applied when no state is reachable.
+     *
+     * @param <A>
+     * @param <B>
+     * @param <S1>
+     * @param <S2>
+     * @param <I>
+     * @param <T1>
+     * @param <TP2>
+     */
     private static final class StateClosureAlgorithm<A extends UniversalAutomaton<S1, I, T1, ?, ?>, B extends MutableAutomaton<S2, I, ?, ?, TP2>, S1, S2, I, T1, TP2>
             implements WorksetMappingAlgorithm<Set<S1>, S2, B> {
 
@@ -195,10 +210,11 @@ public final class Closures {
                     }
                 }
 
-                Set<S1> closure = closureOperator.apply(reachableStates);
-                if (closure.isEmpty()) {
+                if (reachableStates.isEmpty()) {
                     continue;
                 }
+                Set<S1> closure = closureOperator.apply(reachableStates);
+
                 S2 mappedStated = mapping.get(closure);
                 if (mappedStated == null) {
                     mappedStated = result.addState();

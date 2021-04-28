@@ -17,7 +17,6 @@ package net.automatalib.util.ts.modal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
@@ -116,10 +115,10 @@ public final class MTSUtil {
     public static <S, I> Set<S> reachableSubset(UniversalFiniteAlphabetAutomaton<S, I, ?, ?, ?> ts,
                                                 Collection<I> inputs,
                                                 Set<S> states) {
-        Pair<Map<Set<S>, Integer>, CompactDFA<I>> graphView = Subgraphs.subgraphView(new CompactDFA.Creator<>(),
-                                                                                     SubgraphType.DISREGARD_UNKNOWN_LABELS,
+        Pair<Map<Set<S>, Integer>, CompactDFA<I>> graphView = Subgraphs.subgraphView(SubgraphType.DISREGARD_UNKNOWN_LABELS,
                                                                                      ts,
                                                                                      inputs,
+                                                                                     new CompactDFA.Creator<>(),
                                                                                      t -> null);
 
         CompactDFA<I> dfa = graphView.getSecond();
@@ -158,11 +157,7 @@ public final class MTSUtil {
             AutomatonCreator<A, I> creator,
             Function<? super T1, ? extends TP2> tpMapping) {
 
-        return Subgraphs.subgraphView(creator,
-                                      Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
-                                      ts,
-                                      remainingAlphabet,
-                                      tpMapping).getSecond();
+        return Subgraphs.subgraphView(SubgraphType.HIDE_UNKNOWN_LABELS, ts, remainingAlphabet, creator, tpMapping).getSecond();
 
     }
 

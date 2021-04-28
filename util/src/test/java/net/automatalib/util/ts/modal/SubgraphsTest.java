@@ -18,7 +18,6 @@ package net.automatalib.util.ts.modal;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,11 +37,7 @@ public class SubgraphsTest {
         final Collection<String> inputs = Arrays.asList("b", "d");
 
         final Pair<Map<Set<Integer>, Integer>, CompactMMC<String>> result =
-                Subgraphs.subgraphView(new CompactMMC.Creator<>(),
-                                       SubgraphType.HIDE_UNKNOWN_LABELS,
-                                       contract,
-                                       inputs,
-                                       t -> null);
+                Subgraphs.subgraphView(SubgraphType.HIDE_UNKNOWN_LABELS, contract, inputs, new CompactMMC.Creator<>(), t -> null);
 
         final CompactMMC<String> mmc = result.getSecond();
 
@@ -58,10 +53,10 @@ public class SubgraphsTest {
         final Collection<String> inputs = Arrays.asList("a", "b", "d");
 
         final Pair<Map<Set<Integer>, Integer>, CompactMMC<String>> result =
-                Subgraphs.subgraphView(new CompactMMC.Creator<>(),
-                                       SubgraphType.DISREGARD_UNKNOWN_LABELS,
+                Subgraphs.subgraphView(SubgraphType.DISREGARD_UNKNOWN_LABELS,
                                        contract,
                                        inputs,
+                                       new CompactMMC.Creator<>(),
                                        t -> null);
 
         final CompactMMC<String> mmc = result.getSecond();

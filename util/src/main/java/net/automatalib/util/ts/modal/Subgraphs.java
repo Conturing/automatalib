@@ -58,20 +58,20 @@ public final class Subgraphs {
      * Creates a new instance of creator and copies ts into it. All symbols not in inputs are handled according to
      * strategy.
      */
-    public static <A extends MutableAutomaton<S1, I, ?, ?, TP1>, B extends UniversalFiniteAlphabetAutomaton<S2, I, T2, ?, TP2>, S1, I, TP1, S2, T2, TP2> Pair<Map<Set<S2>, S1>, A> subgraphView(
-            AutomatonCreator<A, I> creator,
+    public static <A extends UniversalFiniteAlphabetAutomaton<S1, I, T1, ?, TP1>, B extends MutableAutomaton<S2, I, ?, ?, TP2>, S1, I, TP1, S2, T1, TP2> Pair<Map<Set<S1>, S2>, B> subgraphView(
             SubgraphType type,
-            B ts,
-            Collection<I> inputs,
-            Function<? super T2, ? extends TP1> tpMapping) {
+            A ts,
+            Collection<I> remainingInputs,
+            AutomatonCreator<B, I> creator,
+            Function<? super T1, ? extends TP2> tpMapping) {
 
         return Closures.closure(ts,
-                                inputs,
+                                remainingInputs,
                                 creator,
                                 Closures.toClosureOperator(ts,
                                                            ts.getInputAlphabet(),
-                                                           type.getTransitionPredicate(inputs)),
-                                TransitionPredicates.inputIn(inputs),
+                                                           type.getTransitionPredicate(remainingInputs)),
+                                TransitionPredicates.inputIn(remainingInputs),
                                 tpMapping);
     }
 }
