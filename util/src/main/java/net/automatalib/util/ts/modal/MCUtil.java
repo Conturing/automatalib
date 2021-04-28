@@ -101,51 +101,6 @@ public final class MCUtil {
         return SystemComponent.of(result, uniqueState);
     }
 
-    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP1>, S1, S2, I, T1, TP1 extends MutableModalEdgeProperty> A observableAutomaton(
-            ModalTransitionSystem<S1, I, T1, TP1> ts,
-            Collection<I> remainingAlphabet,
-            AutomatonCreator<A, I> creator) {
-
-        return observableAutomaton(ts,
-                                   remainingAlphabet,
-                                   creator,
-                                   ts::getTransitionProperty);
-
-    }
-
-    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP2>, S1, S2, I, T1, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> A observableAutomaton(
-            ModalTransitionSystem<S1, I, T1, TP1> ts,
-            Collection<I> remainingAlphabet,
-            AutomatonCreator<A, I> creator,
-            Function<? super T1, ? extends TP2> tpMapping) {
-
-        return Subgraphs.subgraphView(creator,
-                                      Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
-                                      ts,
-                                      remainingAlphabet,
-                                      tpMapping).getSecond();
-
-    }
-
-    public static <A extends MutableModalTransitionSystem<S2, I, T2, TP2>, S1, S2, I, T1, T2, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> A determizeObservable(
-            ModalTransitionSystem<S1, I, T1, TP1> ts,
-            Collection<I> remainingAlphabet,
-            AutomatonCreator<A, I> creator,
-            Function<? super T1, ? extends TP2> tpMapping,
-            Comparator<TP2> comp) {
-
-        A observable = observableAutomaton(ts, remainingAlphabet, creator, tpMapping);
-
-        Function<Collection<T2>, ? extends TP2> tMapping = tset -> tset.stream()
-                                                                       .map(observable::getTransitionProperty)
-                                                                       .max(comp)
-                                                                       .get();
-
-        Closures.transitionPostprocessing(observable, observable.getInputAlphabet(), tMapping);
-
-        return observable;
-    }
-
     public static <I, B extends ModalTransitionSystem<S2, I, T2, ?>, S2, T2> DFA<?, I> redContextLanguage(
             SystemComponent<B, S2> system,
             Collection<I> inputs) {

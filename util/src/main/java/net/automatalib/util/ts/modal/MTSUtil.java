@@ -15,8 +15,10 @@
  */
 package net.automatalib.util.ts.modal;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import net.automatalib.automata.AutomatonCreator;
+import net.automatalib.automata.FiniteAlphabetAutomaton;
+import net.automatalib.automata.MutableAutomaton;
 import net.automatalib.automata.UniversalFiniteAlphabetAutomaton;
 import net.automatalib.automata.fsa.impl.compact.CompactDFA;
 import net.automatalib.commons.util.Pair;
@@ -33,10 +37,13 @@ import net.automatalib.ts.TransitionPredicate;
 import net.automatalib.ts.modal.CompactMTS;
 import net.automatalib.ts.modal.ModalTransitionSystem;
 import net.automatalib.ts.modal.MutableModalTransitionSystem;
+import net.automatalib.ts.modal.transition.ModalEdgeProperty;
 import net.automatalib.ts.modal.transition.ModalEdgeProperty.ModalType;
 import net.automatalib.ts.modal.transition.ModalEdgePropertyImpl;
+import net.automatalib.ts.modal.transition.MutableModalEdgeProperty;
 import net.automatalib.util.automata.copy.AutomatonCopyMethod;
 import net.automatalib.util.automata.copy.AutomatonLowLevelCopy;
+import net.automatalib.util.fixpoint.Closures;
 import net.automatalib.util.graphs.Graphs;
 import net.automatalib.util.graphs.sssp.SSSPResult;
 import net.automatalib.util.ts.modal.Subgraphs.SubgraphType;
@@ -131,6 +138,68 @@ public final class MTSUtil {
         }
 
         return reachableStates;
+    }
+
+    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP1>, S1, S2, I, T1, TP1 extends MutableModalEdgeProperty> A observableAutomaton(
+            ModalTransitionSystem<S1, I, T1, TP1> ts,
+            Collection<I> remainingAlphabet,
+            AutomatonCreator<A, I> creator) {
+
+        return observableAutomaton(ts,
+                                   remainingAlphabet,
+                                   creator,
+                                   ts::getTransitionProperty);
+
+    }
+
+    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP2>, S1, S2, I, T1, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> A observableAutomaton(
+            ModalTransitionSystem<S1, I, T1, TP1> ts,
+            Collection<I> remainingAlphabet,
+            AutomatonCreator<A, I> creator,
+            Function<? super T1, ? extends TP2> tpMapping) {
+
+        return Subgraphs.subgraphView(creator,
+                                      Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS,
+                                      ts,
+                                      remainingAlphabet,
+                                      tpMapping).getSecond();
+
+    }
+
+    public static <A extends MutableModalTransitionSystem<S2, I, T2, TP2>, S1, S2, I, T1, T2, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> A determizeObservable(
+            ModalTransitionSystem<S1, I, T1, TP1> ts,
+            Collection<I> remainingAlphabet,
+            AutomatonCreator<A, I> creator,
+            Function<? super T1, ? extends TP2> tpMapping,
+            Comparator<TP2> comp) {
+
+        A observable = observableAutomaton(ts, remainingAlphabet, creator, tpMapping);
+
+        Function<Collection<T2>, ? extends TP2> tMapping = tset -> tset.stream()
+                                                                       .map(observable::getTransitionProperty)
+                                                                       .max(comp)
+                                                                       .get();
+
+        Closures.transitionPostprocessing(observable, observable.getInputAlphabet(), tMapping);
+
+        return observable;
+    }
+
+    public static <A extends MutableAutomaton<S, I, T, ?, ?> & FiniteAlphabetAutomaton<S, I, T>, S, I, T> void removeTransitionIf(A ts,
+                                                                                                                                  TransitionPredicate<S, I, T> filter) {
+        removeTransitionIf(ts, ts.getInputAlphabet(), filter);
+    }
+
+    public static <A extends MutableAutomaton<S, I, T, ?, ?>, S, I, T> void removeTransitionIf(A ts,
+                                                                                               Collection<I> inputs,
+                                                                                               TransitionPredicate<S, I, T> filter) {
+        for (S state : ts.getStates()) {
+            for (I label : inputs) {
+                Collection<T> transitions = new ArrayList<>(ts.getTransitions(state, label));
+                transitions.removeIf(t -> filter.apply(state, label, t));
+                ts.setTransitions(state, label, transitions);
+            }
+        }
     }
 
     public static <S, I, T> ModalTransitionSystem<?, I, ?, ?> toLTS(ModalTransitionSystem<S, I, T, ?> mts,
