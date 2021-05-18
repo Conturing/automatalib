@@ -138,8 +138,7 @@ public final class MTSUtil {
 
         return reachableStates;
     }
-
-    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP1>, S1, S2, I, T1, TP1 extends MutableModalEdgeProperty> A observableAutomaton(
+    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP1>, S1, S2, I, T1, TP1 extends MutableModalEdgeProperty> Pair<Map<Set<S1>, S2>, A> observableAutomaton(
             ModalTransitionSystem<S1, I, T1, TP1> ts,
             Collection<I> remainingAlphabet,
             AutomatonCreator<A, I> creator) {
@@ -151,13 +150,13 @@ public final class MTSUtil {
 
     }
 
-    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP2>, S1, S2, I, T1, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> A observableAutomaton(
+    public static <A extends MutableModalTransitionSystem<S2, I, ?, TP2>, S1, S2, I, T1, TP1 extends ModalEdgeProperty, TP2 extends MutableModalEdgeProperty> Pair<Map<Set<S1>, S2>, A> observableAutomaton(
             ModalTransitionSystem<S1, I, T1, TP1> ts,
             Collection<I> remainingAlphabet,
             AutomatonCreator<A, I> creator,
             Function<? super T1, ? extends TP2> tpMapping) {
 
-        return Subgraphs.subgraphView(SubgraphType.HIDE_UNKNOWN_LABELS, ts, remainingAlphabet, creator, tpMapping).getSecond();
+        return Subgraphs.subgraphView(SubgraphType.HIDE_UNKNOWN_LABELS, ts, remainingAlphabet, creator, tpMapping);
 
     }
 
@@ -168,7 +167,7 @@ public final class MTSUtil {
             Function<? super T1, ? extends TP2> tpMapping,
             Comparator<TP2> comp) {
 
-        A observable = observableAutomaton(ts, remainingAlphabet, creator, tpMapping);
+        A observable = observableAutomaton(ts, remainingAlphabet, creator, tpMapping).getSecond();
 
         Function<Collection<T2>, ? extends TP2> tMapping = tset -> tset.stream()
                                                                        .map(observable::getTransitionProperty)
