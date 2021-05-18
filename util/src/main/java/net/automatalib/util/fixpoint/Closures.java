@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -192,7 +193,7 @@ public final class Closures {
         }
 
         @Override
-        public Collection<Set<S1>> update(Map<Set<S1>, S2> mapping, Set<S1> currentT) {
+        public Collection<Set<S1>> update(Map<Set<S1>, S2> stateMapping, Set<S1> currentT) {
 
             List<Set<S1>> discovered = new ArrayList<>(currentT.size());
 
@@ -215,14 +216,14 @@ public final class Closures {
                 }
                 Set<S1> closure = closureOperator.apply(reachableStates);
 
-                S2 mappedStated = mapping.get(closure);
-                if (mappedStated == null) {
-                    mappedStated = result.addState();
-                    mapping.put(closure, mappedStated);
+                if (stateMapping.putIfAbsent(closure, Objects.requireNonNull(result.addState())) == null) {
                     discovered.add(closure);
                 }
                 for (T1 transition : transitions) {
-                    result.addTransition(mapping.get(currentT), input, mappedStated, tpMapping.apply(transition));
+                    result.addTransition(stateMapping.get(currentT),
+                                         input,
+                                         stateMapping.get(closure),
+                                         tpMapping.apply(transition));
                 }
             }
 
