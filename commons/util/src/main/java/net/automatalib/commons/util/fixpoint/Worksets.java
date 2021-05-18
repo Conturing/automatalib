@@ -52,8 +52,7 @@ public final class Worksets {
             final Collection<T> discovered = algorithm.update(current);
 
             for (T element : discovered) {
-                if (!tracking.contains(element)) {
-                    tracking.add(element);
+                if (tracking.add(element)) {
                     stack.addLast(element);
                 }
             }
@@ -81,8 +80,7 @@ public final class Worksets {
             final Collection<T> discovered = algorithm.update(mapping, currentT);
 
             for (T element : discovered) {
-                if (!tracking.contains(element)) {
-                    tracking.add(element);
+                if (tracking.add(element)) {
                     stack.addLast(element);
                 }
             }
