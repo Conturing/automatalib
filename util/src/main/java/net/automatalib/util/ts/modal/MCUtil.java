@@ -15,6 +15,10 @@
  */
 package net.automatalib.util.ts.modal;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +34,7 @@ import java.util.stream.Collectors;
 import net.automatalib.automata.AutomatonCreator;
 import net.automatalib.automata.fsa.DFA;
 import net.automatalib.automata.fsa.impl.compact.CompactDFA;
+import net.automatalib.automata.fsa.impl.compact.CompactNFA;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.commons.util.mappings.Mapping;
 import net.automatalib.ts.modal.CompactMTS;
@@ -45,6 +50,7 @@ import net.automatalib.util.automata.Automata;
 import net.automatalib.util.automata.copy.AutomatonCopyMethod;
 import net.automatalib.util.automata.copy.AutomatonLowLevelCopy;
 import net.automatalib.util.automata.fsa.MutableDFAs;
+import net.automatalib.util.automata.fsa.NFAs;
 import net.automatalib.util.automata.predicates.TransitionPredicates;
 import net.automatalib.util.fixpoint.Closures;
 import net.automatalib.words.Alphabet;
@@ -84,6 +90,10 @@ public final class MCUtil {
                     if (modalContract.getTransitionProperty(transition).getColor() ==
                         ModalContractEdgeProperty.EdgeColor.RED) {
                         S2 source = mapping.get(state);
+                        if (source == null) {
+                            continue; // state is unreachable
+                        }
+                        assert result.getStates().contains(source);
                         TP2 property = mayOnlySupplier.get();
                         assert property.isMayOnly();
                         result.addTransition(source, input, uniqueState, property);
