@@ -16,15 +16,26 @@
 package net.automatalib.util.ts.modal;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import net.automatalib.automata.AutomatonCreator;
 import net.automatalib.automata.MutableAutomaton;
 import net.automatalib.automata.UniversalFiniteAlphabetAutomaton;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.ts.TransitionPredicate;
+import net.automatalib.ts.modal.CompactMC;
+import net.automatalib.ts.modal.CompactMTS;
+import net.automatalib.ts.modal.ModalContract;
+import net.automatalib.ts.modal.ModalTransitionSystem;
+import net.automatalib.ts.modal.transition.ModalContractEdgeProperty;
+import net.automatalib.ts.modal.transition.ModalContractEdgePropertyImpl;
+import net.automatalib.ts.modal.transition.ModalEdgeProperty;
+import net.automatalib.ts.modal.transition.ModalEdgePropertyImpl;
 import net.automatalib.util.automata.predicates.TransitionPredicates;
 import net.automatalib.util.fixpoint.Closures;
 
@@ -52,6 +63,11 @@ public final class Subgraphs {
         abstract <S, I, T> TransitionPredicate<S, I, T> getTransitionPredicate(Collection<I> inputs);
     }
 
+    public static <TP1, TP2> Optional<TP2> propertyFunction(Comparator<TP1> cmp, Function<TP1, TP2> tpMapper, Stream<TP1> properties) {
+        //Comparator<ModalEdgeProperty> cmp = Comparator.comparingInt(o -> (o.isMust() ? 1 : 0));
+        return properties.max(cmp).map(tpMapper);
+    }
+
     /**
      * Returns the subgraph of ts with labels from inputs.
      * <p>
@@ -63,7 +79,7 @@ public final class Subgraphs {
             A ts,
             Collection<I> remainingInputs,
             AutomatonCreator<B, I> creator,
-            Function<? super T1, ? extends TP2> tpMapping) {
+            Function<? super Collection<? super T1>, ? extends TP2> tpMapping) {
 
         return Closures.closure(ts,
                                 remainingInputs,
@@ -73,5 +89,39 @@ public final class Subgraphs {
                                                            type.getTransitionPredicate(remainingInputs)),
                                 TransitionPredicates.inputIn(remainingInputs),
                                 tpMapping);
+    }
+
+    public static <A extends ModalTransitionSystem<S1, I, T1, TP1>, S1, I, T1, TP1 extends ModalEdgeProperty> Pair<Map<Set<S1>, Integer>, CompactMTS<I>> subgraphViewMTS(
+            SubgraphType type,
+            A ts,
+            Collection<I> remainingInputs) {
+
+        return subgraphView(type,
+                            ts,
+                            remainingInputs,
+                            new CompactMTS.Creator<>(),
+                            trs -> ModalEdgePropertyImpl.from(trs.stream()
+                                                                .map(t -> ts.getTransitionProperty((T1) t))
+                                                                .max(Comparator.comparingInt(o -> (o.isMust() ? 1 : 0)))
+                                                                .get())
+                            );
+    }
+
+    public static <A extends ModalContract<S1, I, T1, TP1>, S1, I, T1, TP1 extends ModalContractEdgeProperty> Pair<Map<Set<S1>, Integer>, CompactMC<I>> subgraphViewMC(
+            SubgraphType type,
+            A ts,
+            Collection<I> remainingInputs) {
+
+        return subgraphView(type,
+                            ts,
+                            remainingInputs,
+                            new CompactMC.Creator<>(),
+                            trs -> new ModalContractEdgePropertyImpl(trs.stream()
+                                                                        .map(t -> ts.getTransitionProperty((T1) t))
+                                                                        .max(Comparator.comparingInt(o -> (o.isMust() ? 1 << 3 : 0)
+                                                                                                          + (o.isRed() ? 1 << 2 : 0)
+                                                                                                          + (o.isGreen() ? 1 << 1 : 0)))
+                                                                        .get())
+                            );
     }
 }

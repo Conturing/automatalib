@@ -27,6 +27,10 @@ public class ModalEdgePropertyImpl implements MutableModalEdgeProperty {
         this.type = type;
     }
 
+    public static ModalEdgePropertyImpl from(ModalEdgeProperty other) {
+        return new ModalEdgePropertyImpl(other.getType());
+    }
+
     @Override
     public ModalType getType() {
         return this.type;

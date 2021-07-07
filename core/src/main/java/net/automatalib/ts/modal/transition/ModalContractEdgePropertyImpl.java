@@ -30,6 +30,10 @@ public class ModalContractEdgePropertyImpl extends ModalEdgePropertyImpl impleme
         this.color = color;
     }
 
+    public ModalContractEdgePropertyImpl(ModalContractEdgeProperty tp) {
+        this(tp.getType(), tp.isTau(), tp.getColor());
+    }
+
     @Override
     public boolean isTau() {
         return tau;
