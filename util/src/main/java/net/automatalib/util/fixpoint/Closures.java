@@ -191,9 +191,10 @@ public final class Closures {
                 }
                 Set<S1> closure = closureOperator.apply(reachableStates);
 
-                if (stateMapping.putIfAbsent(closure, Objects.requireNonNull(result.addState())) == null) {
-                    discovered.add(closure);
-                }
+                stateMapping.computeIfAbsent(closure, key -> {
+                    discovered.add(key);
+                    return Objects.requireNonNull(result.addState());
+                });
                 result.addTransition(stateMapping.get(currentT),
                                      input,
                                      stateMapping.get(closure),
