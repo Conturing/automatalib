@@ -158,7 +158,13 @@ public final class MTSUtil {
             Function<? super Collection<? super T1>, ? extends TP2> tpMapping) {
 
         return Subgraphs.subgraphView(SubgraphType.HIDE_UNKNOWN_LABELS, ts, remainingAlphabet, creator, tpMapping);
+    }
 
+    public static <S1, I, T1, TP1 extends ModalEdgeProperty> Pair<Map<Set<S1>, Integer>, CompactMTS<I>> observableMTS(
+            ModalTransitionSystem<S1, I, T1, TP1> ts,
+            Collection<I> remainingAlphabet) {
+
+        return Subgraphs.subgraphViewMTS(SubgraphType.HIDE_UNKNOWN_LABELS, ts, remainingAlphabet);
     }
 
     public static <A extends MutableAutomaton<S, I, T, ?, ?> & FiniteAlphabetAutomaton<S, I, T>, S, I, T> void removeTransitionIf(A ts,

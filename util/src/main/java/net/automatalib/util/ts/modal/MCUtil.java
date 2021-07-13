@@ -37,6 +37,7 @@ import net.automatalib.automata.fsa.impl.compact.CompactDFA;
 import net.automatalib.automata.fsa.impl.compact.CompactNFA;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.commons.util.mappings.Mapping;
+import net.automatalib.ts.modal.CompactMC;
 import net.automatalib.ts.modal.CompactMTS;
 import net.automatalib.ts.modal.ModalContract;
 import net.automatalib.ts.modal.ModalTransitionSystem;
@@ -60,6 +61,13 @@ public final class MCUtil {
 
     private MCUtil() {
         // prevent instantiation
+    }
+
+    public static <S1, I, T1, TP1 extends ModalContractEdgeProperty> Pair<Map<Set<S1>, Integer>, CompactMC<I>> observableMC(
+            ModalContract<S1, I, T1, TP1> ts,
+            Collection<I> remainingAlphabet) {
+
+        return Subgraphs.subgraphViewMC(Subgraphs.SubgraphType.HIDE_UNKNOWN_LABELS, ts, remainingAlphabet);
     }
 
     public static <S1, I, T1, B extends MutableModalTransitionSystem<S2, I, T2, TP2>, S2, T2, TP2 extends MutableModalEdgeProperty> SystemComponent<B, S2> systemComponent(
